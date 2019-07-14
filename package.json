@@ -30,7 +30,7 @@
     "is-string": "^1.0.4",
     "isurl": "^1.0.0",
     "keyscan": "^1.7.0",
-    "limited-request-queue": "github:stevenvachon/limited-request-queue#v3.0.4",
+    "limited-request-queue": "^4.0.0",
     "link-types": "^2.0.0",
     "list-to-array": "^1.1.0",
     "longest": "^2.0.1",
