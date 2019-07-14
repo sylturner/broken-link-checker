@@ -11,7 +11,7 @@
     "broken-link-checker": "bin/blc"
   },
   "dependencies": {
-    "auto-tunnel": "stevenvachon/auto-tunnel",
+    "auto-tunnel": "github:stevenvachon/auto-tunnel",
     "bhttp": "^1.2.4",
     "calmcard": "~0.1.1",
     "chalk": "^2.3.2",
@@ -30,7 +30,7 @@
     "is-string": "^1.0.4",
     "isurl": "^1.0.0",
     "keyscan": "^1.7.0",
-    "limited-request-queue": "stevenvachon/limited-request-queue",
+    "limited-request-queue": "github:stevenvachon/limited-request-queue#v3.0.4",
     "link-types": "^2.0.0",
     "list-to-array": "^1.1.0",
     "longest": "^2.0.1",
@@ -45,7 +45,7 @@
     "supports-semigraphics": "^1.0.1",
     "universal-url": "^1.0.0",
     "url-relation": "^1.0.0-alpha9",
-    "urlcache": "stevenvachon/urlcache",
+    "urlcache": "github:stevenvachon/urlcache",
     "util.promisify": "^1.0.0",
     "walk-parse5": "^1.0.0"
   },
@@ -60,7 +60,7 @@
     "escape-string-regexp": "^1.0.5",
     "mocha": "^5.0.4",
     "nock": "^9.2.3",
-    "nyc": "^11.6.0",
+    "nyc": "^14.1.1",
     "void-elements": "^3.1.0"
   },
   "engines": {
