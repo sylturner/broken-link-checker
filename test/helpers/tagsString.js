@@ -1,7 +1,5 @@
-"use strict";
-const tags = require("../../lib/internal/tags");
-
-const voidElements = require("void-elements");
+import TAGS from "../../lib/internal/tags";
+import voidElements from "void-elements";
 
 
 
@@ -18,24 +16,22 @@ const stringifyTag = (tagName, attrs, url) =>
 
 	html += `<${tagName}`;
 
-	for (let attrName in attrs)
+	Object.keys(attrs).forEach(attrName =>
 	{
 		// Special case for `<meta http-equiv="refresh" content="5; url=redirect.html">`
 		if (tagName==="meta" && attrName==="content")
 		{
-			html += ` http-equiv="refresh" content="5; url=`;
+			html += ` http-equiv="refresh" content="5; url=${url}"`;
 		}
 		else
 		{
-			html += ` ${attrName}="`;
+			html += ` ${attrName}="${url}"`;
 		}
-
-		html += `${url}"`;
-	}
+	});
 
 	html += `>`;
 
-	if (tagName!=="body" && tagName!=="head" && tagName!=="html" && voidElements[tagName]!==true)
+	if (tagName!=="body" && tagName!=="head" && tagName!=="html" && !(tagName in voidElements))
 	{
 		html += `link</${tagName}>`;
 	}
@@ -50,9 +46,9 @@ const stringifyTag = (tagName, attrs, url) =>
 
 
 
-const tagsString = (filterLevel, frameset, url) =>
+export default (filterLevel, isFrameset, url) =>
 {
-	const filteredTags = tags[filterLevel];
+	const filteredTags = TAGS[filterLevel];
 	let html = "";
 
 	if (filteredTags.html !== undefined)
@@ -68,7 +64,7 @@ const tagsString = (filterLevel, frameset, url) =>
 
 
 
-	if (frameset)
+	if (isFrameset)
 	{
 		html += `<frameset>`;
 		html += stringifyTag("frame", filteredTags.frame, url);
@@ -81,7 +77,7 @@ const tagsString = (filterLevel, frameset, url) =>
 			html += stringifyTag("body", filteredTags.body, url);
 		}
 
-		for (let tagName in filteredTags)
+		Object.keys(filteredTags).forEach(tagName =>
 		{
 			if (tagName === "*")
 			{
@@ -91,7 +87,7 @@ const tagsString = (filterLevel, frameset, url) =>
 			{
 				html += stringifyTag(tagName, filteredTags[tagName], url);
 			}
-		}
+		});
 
 		if (filteredTags.body !== undefined)
 		{
@@ -106,7 +102,3 @@ const tagsString = (filterLevel, frameset, url) =>
 
 	return html;
 };
-
-
-
-module.exports = tagsString;

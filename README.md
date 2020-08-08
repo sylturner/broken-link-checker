@@ -1,22 +1,25 @@
-# broken-link-checker [![NPM Version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Dependency Status][david-image]][david-url]
+# broken-link-checker [![NPM Version][npm-image]][npm-url] ![Build Status][ci-image] [![Coverage Status][coveralls-image]][coveralls-url] [![Dependency Monitor][greenkeeper-image]][greenkeeper-url]
 
-> Find broken links, missing images, etc in your HTML.
+> Find broken links, missing images, etc within your HTML.
 
-Features:
-* Stream-parses local and remote HTML pages
-* Concurrently checks multiple links
-* Supports various HTML elements/attributes, not just `<a href>`
-* Supports redirects, basic auth, absolute URLs, relative URLs and `<base>`
-* Honors robot exclusions (robots.txt, headers and `rel`)
-* WHATWG specifications-compliant [HTML](https://html.spec.whatwg.org) and [URL](https://url.spec.whatwg.org) parsing
-* Provides detailed information about each link (HTTP and HTML)
-* URL keyword filtering with wildcards
-* Pause/Resume at any time
+* ✅ **Complete**: Unicode, redirects, compression, basic auth, absolute/relative/local URLs.
+* ⚡️ **Fast**: Concurrent, streamed and cached.
+* 🍰 **Easy**: Convenient defaults and very configurable.
+
+Other features:
+* Support for many HTML elements and attributes; not only `<a href>` and `<img src>`.
+* Support for relative URLs with `<base href>`.
+* WHATWG specifications-compliant [HTML](https://html.spec.whatwg.org) and [URL](https://url.spec.whatwg.org) parsing.
+* Honor robot exclusions (robots.txt, headers and `rel`), optionally.
+* Detailed information for reporting and maintenance.
+* URL keyword filtering with simple wildcards.
+* Pause/Resume at any time.
+* 🖕
 
 
 ## Installation
 
-[Node.js](http://nodejs.org/) `>= 6` is required. There're two ways to use it:
+[Node.js](http://nodejs.org) `>= 12` is required. There're two ways to use it:
 
 ### Command Line Usage
 To install, type this at the command line:
@@ -37,7 +40,7 @@ To install, type this at the command line:
 ```shell
 npm install broken-link-checker
 ```
-The rest of this document will assist you with how to use the API.
+The remainder of this document will assist you in using the API.
 
 
 ## Classes
@@ -50,13 +53,14 @@ Scans an HTML document to find broken links. All methods from [`EventEmitter`](h
 const {HtmlChecker} = require('broken-link-checker');
 
 const htmlChecker = new HtmlChecker(options)
+  .on('error', (error) => {})
   .on('html', (tree, robots) => {})
   .on('queue', () => {})
   .on('junk', (result) => {})
   .on('link', (result) => {})
   .on('complete', () => {});
 
-htmlChecker.scan(html, baseUrl);
+htmlChecker.scan(html, baseURL);
 ```
 
 #### Methods & Properties
@@ -66,19 +70,21 @@ htmlChecker.scan(html, baseUrl);
 * `.numQueuedLinks` returns the number of links that currently have no active requests.
 * `.pause()` will pause the internal link queue, but will not pause any active requests.
 * `.resume()` will resume the internal link queue.
-* `.scan(html, baseUrl)` parses & scans a single HTML document and returns a `Promise`. Calling this function while a previous scan is in progress will result in a thrown error. Arguments:
+* `.scan(html, baseURL)` parses & scans a single HTML document and returns a `Promise`. Calling this function while a previous scan is in progress will result in a thrown error. Arguments:
   * `html` must be either a [`Stream`](https://nodejs.org/api/stream.html) or a string.
-  * `baseUrl` must be either a [`URL`](https://developer.mozilla.org/en/docs/Web/API/URL) or an absolute URL string. Without this value, links to relative URLs will output a "BLC_INVALID" error (unless an absolute `<base href>` is found).
+  * `baseURL` must be a [`URL`](https://mdn.io/URL). Without this value, links to relative URLs will output a "BLC_INVALID" error (unless an absolute `<base href>` is found).
 
 #### Events
 * `'complete'` is emitted after the last result or zero results.
+* `'error'` is emitted when an error occurs within any of your event handlers and will prevent the current scan from failing. Arguments:
+  * `error` is the `Error`.
 * `'html'` is emitted after the HTML document has been fully parsed. Arguments:
   * `tree` is supplied by [parse5](https://npmjs.com/parse5).
   * `robots` is an instance of [robot-directives](https://npmjs.com/robot-directives) containing any `<meta>` robot exclusions.
 * `'junk'` is emitted on each skipped/unchecked link, as configured in options. Arguments:
-  * `result` is a [`Link`](https://github.com/stevenvachon/broken-link-checker/blob/v0.8.0/lib/internal/Link.js#L15-L55).
+  * `result` is a [`Link`](https://github.com/stevenvachon/broken-link-checker/blob/master/lib/internal/Link.js).
 * `'link'` is emitted with the result of each checked/unskipped link (broken or not). Arguments:
-  * `result` is a [`Link`](https://github.com/stevenvachon/broken-link-checker/blob/v0.8.0/lib/internal/Link.js#L15-L55).
+  * `result` is a [`Link`](https://github.com/stevenvachon/broken-link-checker/blob/master/lib/internal/Link.js).
 * `'queue'` is emitted when a link is internally queued, dequeued or made active.
 
 
@@ -89,22 +95,24 @@ Scans the HTML content at each queued URL to find broken links. All methods from
 const {HtmlUrlChecker} = require('broken-link-checker');
 
 const htmlUrlChecker = new HtmlUrlChecker(options)
-  .on('html', (tree, robots, response, pageUrl, customData) => {})
+  .on('error', (error) => {})
+  .on('html', (tree, robots, response, pageURL, customData) => {})
   .on('queue', () => {})
   .on('junk', (result, customData) => {})
   .on('link', (result, customData) => {})
-  .on('page', (error, pageUrl, customData) => {})
+  .on('page', (error, pageURL, customData) => {})
   .on('end', () => {});
 
-htmlUrlChecker.enqueue(pageUrl, customData);
+htmlUrlChecker.enqueue(pageURL, customData);
 ```
 
 #### Methods & Properties
 * `.clearCache()` will remove any cached URL responses.
 * `.dequeue(id)` removes a page from the queue. Returns `true` on success or `false` on failure.
-* `.enqueue(pageUrl, customData)` adds a page to the queue. Queue items are auto-dequeued when their requests are complete. Returns a queue ID on success. Arguments:
-  * `pageUrl` must be a [`URL`](https://developer.mozilla.org/en/docs/Web/API/URL) or an absolute URL string.
+* `.enqueue(pageURL, customData)` adds a page to the queue. Queue items are auto-dequeued when their requests are complete. Returns a queue ID on success. Arguments:
+  * `pageURL` must be a [`URL`](https://mdn.io/URL).
   * `customData` is optional data (of any type) that is stored in the queue item for the page.
+* `.has(id)` returns `true` if the queue contains an active or queued page tagged with `id` and `false` if not.
 * `.isPaused` returns `true` if the queue is paused and `false` if not.
 * `.numActiveLinks` returns the number of links with active requests.
 * `.numPages` returns the total number of pages in the queue.
@@ -114,21 +122,23 @@ htmlUrlChecker.enqueue(pageUrl, customData);
 
 #### Events
 * `'end'` is emitted when the end of the queue has been reached.
+* `'error'` is emitted when an error occurs within any of your event handlers and will prevent the current scan from failing. Arguments:
+  * `error` is the `Error`.
 * `'html'` is emitted after a page's HTML document has been fully parsed. Arguments:
   * `tree` is supplied by [parse5](https://npmjs.com/parse5).
   * `robots` is an instance of [robot-directives](https://npmjs.com/robot-directives) containing any `<meta>` and `X-Robots-Tag` robot exclusions.
   * `response` is the full HTTP response for the page, excluding the body.
-  * `pageUrl` is the `URL` to the current page being scanned.
+  * `pageURL` is the `URL` to the current page being scanned.
   * `customData` is whatever was queued.
 * `'junk'` is emitted on each skipped/unchecked link, as configured in options. Arguments:
-  * `result` is a [`Link`](https://github.com/stevenvachon/broken-link-checker/blob/v0.8.0/lib/internal/Link.js#L15-L55).
+  * `result` is a [`Link`](https://github.com/stevenvachon/broken-link-checker/blob/master/lib/internal/Link.js).
   * `customData` is whatever was queued.
 * `'link'` is emitted with the result of each checked/unskipped link (broken or not) within the current page. Arguments:
-  * `result` is a [`Link`](https://github.com/stevenvachon/broken-link-checker/blob/v0.8.0/lib/internal/Link.js#L15-L55).
+  * `result` is a [`Link`](https://github.com/stevenvachon/broken-link-checker/blob/master/lib/internal/Link.js).
   * `customData` is whatever was queued.
 * `'page'` is emitted after a page's last result, on zero results, or if the HTML could not be retrieved. Arguments:
   * `error` will be an `Error` if such occurred or `null` if not.
-  * `pageUrl` is the `URL` to the current page being scanned.
+  * `pageURL` is the `URL` to the current page being scanned.
   * `customData` is whatever was queued.
 * `'queue'` is emitted when a URL (link or page) is queued, dequeued or made active.
 
@@ -140,24 +150,26 @@ Recursively scans (crawls) the HTML content at each queued URL to find broken li
 const {SiteChecker} = require('broken-link-checker');
 
 const siteChecker = new SiteChecker(options)
+  .on('error', (error) => {})
   .on('robots', (robots, customData) => {})
-  .on('html', (tree, robots, response, pageUrl, customData) => {})
+  .on('html', (tree, robots, response, pageURL, customData) => {})
   .on('queue', () => {})
   .on('junk', (result, customData) => {})
   .on('link', (result, customData) => {})
-  .on('page', (error, pageUrl, customData) => {})
-  .on('site', (error, siteUrl, customData) => {})
+  .on('page', (error, pageURL, customData) => {})
+  .on('site', (error, siteURL, customData) => {})
   .on('end', () => {});
 
-siteChecker.enqueue(siteUrl, customData);
+siteChecker.enqueue(siteURL, customData);
 ```
 
 #### Methods & Properties
 * `.clearCache()` will remove any cached URL responses.
 * `.dequeue(id)` removes a site from the queue. Returns `true` on success or `false` on failure.
-* `.enqueue(siteUrl, customData)` adds [the first page of] a site to the queue. Queue items are auto-dequeued when their requests are complete. Returns a queue ID on success. Arguments:
-  * `siteUrl` must be a [`URL`](https://developer.mozilla.org/en/docs/Web/API/URL) or an absolute URL string.
+* `.enqueue(siteURL, customData)` adds [the first page of] a site to the queue. Queue items are auto-dequeued when their requests are complete. Returns a queue ID on success. Arguments:
+  * `siteURL` must be a [`URL`](https://mdn.io/URL).
   * `customData` is optional data (of any type) that is stored in the queue item for the site.
+* `.has(id)` returns `true` if the queue contains an active or queued site tagged with `id` and `false` if not.
 * `.isPaused` returns `true` if the queue is paused and `false` if not.
 * `.numActiveLinks` returns the number of links with active requests.
 * `.numPages` returns the total number of pages in the queue.
@@ -168,21 +180,23 @@ siteChecker.enqueue(siteUrl, customData);
 
 #### Events
 * `'end'` is emitted when the end of the queue has been reached.
+* `'error'` is emitted when an error occurs within any of your event handlers and will prevent the current scan from failing. Arguments:
+  * `error` is the `Error`.
 * `'html'` is emitted after a page's HTML document has been fully parsed. Arguments:
   * `tree` is supplied by [parse5](https://npmjs.com/parse5).
   * `robots` is an instance of [robot-directives](https://npmjs.com/robot-directives) containing any `<meta>` and `X-Robots-Tag` robot exclusions.
   * `response` is the full HTTP response for the page, excluding the body.
-  * `pageUrl` is the `URL` to the current page being scanned.
+  * `pageURL` is the `URL` to the current page being scanned.
   * `customData` is whatever was queued.
 * `'junk'` is emitted on each skipped/unchecked link, as configured in options. Arguments:
-  * `result` is a [`Link`](https://github.com/stevenvachon/broken-link-checker/blob/v0.8.0/lib/internal/Link.js#L15-L55).
+  * `result` is a [`Link`](https://github.com/stevenvachon/broken-link-checker/blob/master/lib/internal/Link.js).
   * `customData` is whatever was queued.
 * `'link'` is emitted with the result of each checked/unskipped link (broken or not) within the current page. Arguments:
-  * `result` is a [`Link`](https://github.com/stevenvachon/broken-link-checker/blob/v0.8.0/lib/internal/Link.js#L15-L55).
+  * `result` is a [`Link`](https://github.com/stevenvachon/broken-link-checker/blob/master/lib/internal/Link.js).
   * `customData` is whatever was queued.
 * `'page'` is emitted after a page's last result, on zero results, or if the HTML could not be retrieved. Arguments:
   * `error` will be an `Error` if such occurred or `null` if not.
-  * `pageUrl` is the `URL` to the current page being scanned.
+  * `pageURL` is the `URL` to the current page being scanned.
   * `customData` is whatever was queued.
 * `'queue'` is emitted when a URL (link, page or site) is queued, dequeued or made active.
 * `'robots'` is emitted after a site's robots.txt has been downloaded. Arguments:
@@ -190,7 +204,7 @@ siteChecker.enqueue(siteUrl, customData);
   * `customData` is whatever was queued.
 * `'site'` is emitted after a site's last result, on zero results, or if the *initial* HTML could not be retrieved. Arguments:
   * `error` will be an `Error` if such occurred or `null` if not.
-  * `siteUrl` is the `URL` to the current site being crawled.
+  * `siteURL` is the `URL` to the current site being crawled.
   * `customData` is whatever was queued.
 
 **Note:** the `filterLevel` option is used for determining which links are recursive.
@@ -203,6 +217,7 @@ Requests each queued URL to determine if they are broken. All methods from [`Eve
 const {UrlChecker} = require('broken-link-checker');
 
 const urlChecker = new UrlChecker(options)
+  .on('error', (error) => {})
   .on('queue', () => {})
   .on('link', (result, customData) => {})
   .on('end', () => {});
@@ -214,8 +229,9 @@ urlChecker.enqueue(url, customData);
 * `.clearCache()` will remove any cached URL responses.
 * `.dequeue(id)` removes a URL from the queue. Returns `true` on success or `false` on failure.
 * `.enqueue(url, customData)` adds a URL to the queue. Queue items are auto-dequeued when their requests are completed. Returns a queue ID on success. Arguments:
-  * `url` must be a [`URL`](https://developer.mozilla.org/en/docs/Web/API/URL) or an absolute URL string.
+  * `url` must be a [`URL`](https://mdn.io/URL).
   * `customData` is optional data (of any type) that is stored in the queue item for the URL.
+* `.has(id)` returns `true` if the queue contains an active or queued URL tagged with `id` and `false` if not.
 * `.isPaused` returns `true` if the queue is paused and `false` if not.
 * `.numActiveLinks` returns the number of links with active requests.
 * `.numQueuedLinks` returns the number of links that currently have no active requests.
@@ -224,8 +240,10 @@ urlChecker.enqueue(url, customData);
 
 #### Events
 * `'end'` is emitted when the end of the queue has been reached.
+* `'error'` is emitted when an error occurs within any of your event handlers and will prevent the current scan from failing. Arguments:
+  * `error` is the `Error`.
 * `'link'` is emitted for each result (broken or not). Arguments:
-  * `result` is a [`Link`](https://github.com/stevenvachon/broken-link-checker/blob/v0.8.0/lib/internal/Link.js#L15-L55).
+  * `result` is a [`Link`](https://github.com/stevenvachon/broken-link-checker/blob/master/lib/internal/Link.js).
   * `customData` is whatever was queued.
 * `'queue'` is emitted when a URL is queued, dequeued or made active.
 
@@ -239,7 +257,7 @@ Will only check links with schemes/protocols mentioned in this list. Any others 
 
 ### `cacheMaxAge`
 Type: `Number`  
-Default Value: `3600000` (1 hour)  
+Default Value: `3_600_000` (1 hour)  
 The number of milliseconds in which a cached response should be considered valid. This is only relevant if the `cacheResponses` option is enabled.
 
 ### `cacheResponses`
@@ -247,17 +265,10 @@ Type: `Boolean`
 Default Value: `true`  
 URL request results will be cached when `true`. This will ensure that each unique URL will only be checked once.
 
-### `customFilter`
-Type: `Function`  
-Default value: `result => true`  
-A synchronous callback that is called after all other filters have been performed. Return `true` to include `result` (a [`Link`](https://github.com/stevenvachon/broken-link-checker/blob/v0.8.0/lib/internal/Link.js#L15-L55)) in the list of links to be checked, or return `false` to have it skipped.
-
-This option does *not* apply to `UrlChecker`.
-
 ### `excludedKeywords`
 Type: `Array`  
 Default value: `[]`  
-Will not check links that match the keywords and glob patterns in this list. The only wildcard supported is `*`.
+A blacklist. Will not check links that match the keywords and glob patterns in this list. The only wildcards supported are [`*` and `!`](https://npmjs.com/matcher).
 
 This option does *not* apply to `UrlChecker`.
 
@@ -271,14 +282,14 @@ This option does *not* apply to `UrlChecker`.
 ### `excludeExternalLinks`
 Type: `Boolean`  
 Default value: `false`  
-Will not check external links when `true`; relative links with a remote `<base>` included.
+Will not check external links (different protocol and/or host) when `true`; relative links with a remote `<base href>` included.
 
 This option does *not* apply to `UrlChecker`.
 
 ### `excludeInternalLinks`
 Type: `Boolean`  
 Default value: `false`  
-Will not check internal links when `true`.
+Will not check internal links (same protocol and host) when `true`.
 
 This option does *not* apply to `UrlChecker` nor `SiteChecker`'s *crawler*.
 
@@ -298,7 +309,7 @@ The tags and attributes that are considered links for checking, split into the f
 * `2`: clickable links, media, frames, meta refreshes, stylesheets, scripts, forms
 * `3`: clickable links, media, frames, meta refreshes, stylesheets, scripts, forms, metadata
 
-Recursive links have a slightly different filter subset. To see the exact breakdown of both, check out the [tag map](https://github.com/stevenvachon/broken-link-checker/blob/master/lib/internal/tags.js). `<base>` is not listed because it is not a link, though it is always parsed.
+Recursive links have a slightly different filter subset. To see the exact breakdown of both, check out the [tag map](https://github.com/stevenvachon/broken-link-checker/blob/master/lib/internal/tags.js). `<base href>` is not listed because it is not a link, though it is always parsed.
 
 This option does *not* apply to `UrlChecker`.
 
@@ -319,6 +330,27 @@ Will not scan pages that search engine crawlers would not follow. Such will have
 
 This option does *not* apply to `UrlChecker`.
 
+### `includedKeywords`
+Type: `Array`  
+Default value: `[]`  
+A whitelist. Will only check links that match the keywords and glob patterns in this list, if any. The only wildcard supported is `*`.
+
+This option does *not* apply to `UrlChecker`.
+
+### `includeLink`
+Type: `Function`  
+Default value: `link => true`  
+A synchronous callback that is called after all other filters have been performed. Return `true` to include `link` (a [`Link`](https://github.com/stevenvachon/broken-link-checker/blob/master/lib/internal/Link.js)) in the list of links to be checked, or return `false` to have it skipped.
+
+This option does *not* apply to `UrlChecker`.
+
+### `includePage`
+Type: `Function`  
+Default value: `url => true`  
+A synchronous callback that is called after all other filters have been performed. Return `true` to include `url` (a [`URL`](https://mdn.io/URL)) in the list of pages to be crawled, or return `false` to have it skipped.
+
+This option does *not* apply to `UrlChecker` nor `HtmlUrlChecker`.
+
 ### `maxSockets`
 Type: `Number`  
 Default value: `Infinity`  
@@ -337,27 +369,32 @@ The number of milliseconds to wait before each request.
 ### `requestMethod`
 Type: `String`  
 Default value: `'head'`  
-The HTTP request method used in checking links. If you experience problems, try using `'get'`, however the `retry405Head` option should have you covered.
+The HTTP request method used in checking links. If you experience problems, try using `'get'`, however the `retryHeadFail` option should have you covered.
 
-### `retry405Head`
+### `retryHeadCodes`
+Type: `Array`  
+Default value: `[405]`  
+The list of HTTP status codes for the `retryHeadFail` option to reference.
+
+### `retryHeadFail`
 Type: `Boolean`  
 Default value: `true`  
-Some servers do not respond correctly to a `'head'` request method. When `true`, a link resulting in an HTTP 405 "Method Not Allowed" error will be re-requested using a `'get'` method before deciding that it is broken. This is only relevant if the `requestMethod` option is set to `'head'`.
+Some servers do not respond correctly to a `'head'` request method. When `true`, a link resulting in an HTTP status code listed within the `retryHeadCodes` option will be re-requested using a `'get'` method before deciding that it is broken. This is only relevant if the `requestMethod` option is set to `'head'`.
 
 ### `userAgent`
 Type: `String`  
-Default value: `'broken-link-checker/0.8.0 Node.js/8.9.4 (OS X; x64)'` (or similar)  
+Default value: `'broken-link-checker/0.8.0 Node.js/12.11.0 (OS X; x64)'` (or similar)  
 The HTTP user-agent to use when checking links as well as retrieving pages and robot exclusions.
 
 
 ## Handling Broken/Excluded Links
-A broken link will have a `broken` value of `true` and a reason code defined in `brokenReason`. A link that was not checked (emitted as `'junk'`) will have an `excluded` value of `true` and a reason code defined in `excludedReason`.
+A broken link will have an `isBroken` value of `true` and a reason code defined in `brokenReason`. A link that was not checked (emitted as `'junk'`) will have an `wasExcluded` value of `true` and a reason code defined in `excludedReason`.
 ```js
-if (result.broken) {
-  console.log(result.brokenReason);
+if (link.isBroken) {
+  console.log(link.brokenReason);
   //-> HTTP_406
-} else if (result.excluded) {
-  console.log(result.excludedReason);
+} else if (link.wasExcluded) {
+  console.log(link.excludedReason);
   //-> BLC_ROBOTS
 }
 ```
@@ -366,30 +403,31 @@ Additionally, more descriptive messages are available for each reason code:
 ```js
 const blc = require('broken-link-checker');
 
-console.log(blc.BLC_ROBOTS);       //-> Robots Exclusion
-console.log(blc.ERRNO_ECONNRESET); //-> connection reset by peer (ECONNRESET)
-console.log(blc.HTTP_404);         //-> Not Found (404)
+console.log(blc.reasons.BLC_ROBOTS);       //-> Robots Exclusion
+console.log(blc.reasons.ERRNO_ECONNRESET); //-> connection reset by peer (ECONNRESET)
+console.log(blc.reasons.HTTP_404);         //-> Not Found (404)
 
 // List all
-console.log(blc);
+console.log(blc.reasons);
 ```
 
 Putting it all together:
 ```js
-if (result.broken) {
-  console.log(blc[result.brokenReason]);
-} else if (result.excluded) {
-  console.log(blc[result.excludedReason]);
+if (link.isBroken) {
+  console.log(blc.reasons[link.brokenReason]);
+} else if (link.wasExcluded) {
+  console.log(blc.reasons[link.excludedReason]);
 }
 ```
 
 
 ## Roadmap Features
+* `'info'` event with messaging such as 'Site does not support HTTP HEAD method' (regarding `retryHeadFail` option)
 * add cheerio support by using parse5's htmlparser2 tree adaptor?
-* load sitemap.xml at end of each `SiteChecker` site to possibly check pages that were not linked to
+* load sitemap.xml at *start* of each `SiteChecker` site (since cache can expire) to possibly check pages that were not linked to, removing from list as *discovered* links are checked
 * remove `options.excludedSchemes` and handle schemes not in `options.acceptedSchemes` as junk?
 * change order of checking to: tcp error, 4xx code (broken), 5xx code (undetermined), 200
-* abort download of body when `options.retry405Head===true`
+* abort download of body when `options.retryHeadFail===true`
 * option to retry broken links a number of times (default=0)
 * option to scrape `response.body` for erroneous sounding text (using [fathom](https://npmjs.com/fathom-web)?), since an error page could be presented but still have code 200
 * option to detect parked domain (302 with no redirect?)
@@ -404,20 +442,17 @@ if (result.broken) {
 * check that data URLs are valid (with [valid-data-url](https://www.npmjs.com/valid-data-url))?
 * supply CORS error for file:// links on sites with a different protocol
 * create an example with http://astexplorer.net
-* swap [calmcard](https://npmjs.com/calmcard) for [matcher](https://npmjs.com/matcher) or both [minimatch](https://npmjs.com/minimatch) and `RegExp`
 * use [debug](https://npmjs.com/debug)
-* use [got](https://npmjs.com/got) ?
 * use [bunyan](https://npmjs.com/bunyan) with JSON output for CLI
-* store request object/headers (or just auth) in `Link.http`?
+* store request object/headers (or just auth) in `Link`?
 * supply basic auth for "page" events?
 * add option for `URLCache` normalization profiles
 
 
 [npm-image]: https://img.shields.io/npm/v/broken-link-checker.svg
 [npm-url]: https://npmjs.org/package/broken-link-checker
-[travis-image]: https://img.shields.io/travis/stevenvachon/broken-link-checker.svg
-[travis-url]: https://travis-ci.org/stevenvachon/broken-link-checker
-[coveralls-image]: https://img.shields.io/coveralls/stevenvachon/broken-link-checker/v0.8.0.svg
+[ci-image]: https://github.com/stevenvachon/broken-link-checker/workflows/tests/badge.svg
+[coveralls-image]: https://img.shields.io/coveralls/stevenvachon/broken-link-checker.svg
 [coveralls-url]: https://coveralls.io/github/stevenvachon/broken-link-checker
-[david-image]: https://img.shields.io/david/stevenvachon/broken-link-checker/v0.8.0.svg
-[david-url]: https://david-dm.org/stevenvachon/broken-link-checker/v0.8.0
+[greenkeeper-image]: https://badges.greenkeeper.io/stevenvachon/broken-link-checker.svg
+[greenkeeper-url]: https://greenkeeper.io/
