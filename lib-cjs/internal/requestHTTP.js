@@ -39,7 +39,7 @@ const createRequest = (url, auth, method, options, retry = false) => new Promise
     agent: (0, _autoTunnel.default)(url, {
       proxyHeaders: headers
     }),
-    auth: stringifyAuth(url, auth),
+    //auth: stringifyAuth(url, auth),
     headers,
     method,
     rejectUnauthorized: false,
