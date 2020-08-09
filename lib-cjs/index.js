@@ -6,33 +6,12 @@ Object.defineProperty(exports, "__esModule", {
 var _exportNames = {
   reasons: true,
   DEFAULT_OPTIONS: true,
-  HtmlChecker: true,
-  HtmlUrlChecker: true,
-  SiteChecker: true,
   UrlChecker: true
 };
 Object.defineProperty(exports, "DEFAULT_OPTIONS", {
   enumerable: true,
   get: function () {
     return _defaultOptions.default;
-  }
-});
-Object.defineProperty(exports, "HtmlChecker", {
-  enumerable: true,
-  get: function () {
-    return _HtmlChecker.default;
-  }
-});
-Object.defineProperty(exports, "HtmlUrlChecker", {
-  enumerable: true,
-  get: function () {
-    return _HtmlUrlChecker.default;
-  }
-});
-Object.defineProperty(exports, "SiteChecker", {
-  enumerable: true,
-  get: function () {
-    return _SiteChecker.default;
   }
 });
 Object.defineProperty(exports, "UrlChecker", {
@@ -74,12 +53,6 @@ var _reasons = _interopRequireWildcard(require("./internal/reasons"));
 exports.reasons = _reasons;
 
 var _defaultOptions = _interopRequireDefault(require("./internal/defaultOptions"));
-
-var _HtmlChecker = _interopRequireDefault(require("./public/HtmlChecker"));
-
-var _HtmlUrlChecker = _interopRequireDefault(require("./public/HtmlUrlChecker"));
-
-var _SiteChecker = _interopRequireDefault(require("./public/SiteChecker"));
 
 var _UrlChecker = _interopRequireDefault(require("./public/UrlChecker"));
 
