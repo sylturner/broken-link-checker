@@ -13,10 +13,9 @@ var _isurl = _interopRequireDefault(require("isurl"));
 
 var _got = require("got");
 
-var _autoTunnel = _interopRequireDefault(require("auto-tunnel"));
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+//import tunnel from "auto-tunnel";
 const ERROR_EVENT = "error";
 const REDIRECT_EVENT = "redirect";
 const RESPONSE_EVENT = "response";
@@ -36,9 +35,7 @@ const createRequest = (url, auth, method, options, retry = false) => new Promise
   };
   const redirects = [];
   (0, _got.stream)(url, {
-    agent: (0, _autoTunnel.default)(url, {
-      proxyHeaders: headers
-    }),
+    //agent: tunnel(url, { proxyHeaders:headers }),
     //auth: stringifyAuth(url, auth),
     headers,
     method,

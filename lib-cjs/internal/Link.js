@@ -123,7 +123,6 @@ class Link extends Map {
 
   break(reasonKey) {
     if (!(reasonKey in reasons)) {
-      console.log('reasonKey', reasonKey);
       reasonKey = "BLC_UNKNOWN";
     }
 

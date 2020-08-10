@@ -67,7 +67,6 @@ const checkHTTP = async (link, auth, cache, options) => {
     response
   }) => response) // exclude any stream
   .catch(error => error);
-  console.log("http result", result);
   copyResponseData(result, link, options);
   link.set(_Link.HTTP_RESPONSE_WAS_CACHED, false);
   return link;
