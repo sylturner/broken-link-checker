@@ -44,12 +44,9 @@ const createRequest = (url, auth, method, options, retry = false) => new Promise
     // accept self-signed SSL certificates
     retries: 0,
     // explicit; they're already disabled for streams
-    throwHttpErrors: false,
-    timeout: 30000
+    throwHttpErrors: false
   }).on(REQUEST_EVENT, request => {
-    console.log("request");
     setTimeout(() => {
-      console.log("timing out");
       request.destroy();
     }, 10000);
   }).on(ERROR_EVENT, reject).on(REDIRECT_EVENT, stream => redirects.push(simplifyResponse(stream))).on(RESPONSE_EVENT, stream => {
