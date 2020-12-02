@@ -72,7 +72,8 @@ class UrlChecker extends _SafeEventEmitter.default {
 
       done();
     }).on(_limitedRequestQueue.END_EVENT, () => {
-      disconnectCache();
+      _classPrivateFieldGet(this, _cache).disconnect();
+
       this.emit(_events.END_EVENT);
     }));
   }
