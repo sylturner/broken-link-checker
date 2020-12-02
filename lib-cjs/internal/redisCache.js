@@ -11,6 +11,10 @@ class RedisCache {
     this.redis = new Redis(redisUrl);
   }
 
+  disconnect() {
+    this.redis.disconnect();
+  }
+
   clean() {
     return true;
   }
