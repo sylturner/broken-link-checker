@@ -43,6 +43,10 @@ class RedisCache {
     return this.redis.set(key, json, "EX", this.expire);
   }
 
+  disconnect() {
+    this.redis.disconnect();
+  }
+
 }
 
 module.exports = RedisCache;
