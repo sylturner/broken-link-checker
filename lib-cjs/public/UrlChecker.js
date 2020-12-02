@@ -67,11 +67,8 @@ class UrlChecker extends _SafeEventEmitter.default {
       link
     }, done) => {
       const result = await (0, _checkLink.default)(link, auth, _classPrivateFieldGet(this, _cache), options);
-      this.emit(_events.LINK_EVENT, result, customData);
-
-      _classPrivateFieldGet(this, _cache).disconnect(); // Auto-starts next queue item, if any
+      this.emit(_events.LINK_EVENT, result, customData); // Auto-starts next queue item, if any
       // Emits REQUEST_QUEUE_END_EVENT, if not
-
 
       done();
     }).on(_limitedRequestQueue.END_EVENT, () => this.emit(_events.END_EVENT)));
