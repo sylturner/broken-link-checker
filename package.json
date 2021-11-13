@@ -47,7 +47,7 @@
     "supports-semigraphics": "^1.0.1",
     "universal-url": "^1.0.0",
     "url-relation": "^1.0.0-alpha9",
-    "urlcache": "github:stevenvachon/urlcache",
+    "urlcache": "github:sylturner/urlcache",
     "util.promisify": "^1.0.0",
     "walk-parse5": "^1.0.0"
   },
